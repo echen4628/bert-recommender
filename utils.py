@@ -45,6 +45,12 @@ def cos_sim(query_embedding,cluster_embedding):
     return q_c_dot/(q_norm*c_norm)
 # dot(x, y)/(norm(x)*norm(y))
 
+def select_cluster(cluster_num, embeddings, df, labels):
+    relevant_idx = labels == cluster_num
+    relevant_embeddings = embeddings[relevant_idx]
+    relevant_df = df.loc[relevant_idx]
+    return relevant_embeddings, relevant_df
+
 def reduce_dim(embeddings, method, dim, custom=None):
     if custom is not None:
         return custom.fit_transform(embeddings)
@@ -135,3 +141,5 @@ def extract_topic_sizes(df):
                      .rename({"Topic": "Topic", "abstract": "Size"}, axis='columns')
                      .sort_values("Size", ascending=False))
     return topic_sizes
+
+########
