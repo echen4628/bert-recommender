@@ -5,12 +5,14 @@ import pandas as pd
 import pdb
 from tqdm import tqdm
 baseurl = "https://papers.nips.cc"
-url_2022 = baseurl + "/paper_files/paper/2022"
-print(url_2022)
-url_2022_response = requests.get(url_2022)
-soup_2022 = BeautifulSoup(url_2022_response.content, "html.parser")
-papers_2022 = soup_2022.find_all("li", {"class": "conference"})
-papers_2022 = [(x.a.string, x.a["href"]) for x in papers_2022]
+url_2019 = baseurl + "/paper_files/paper/2019"
+print(url_2019)
+pdb.set_trace()
+url_2019_response = requests.get(url_2019)
+soup_2019 = BeautifulSoup(url_2019_response.content, "html.parser")
+# papers_2019 = soup_2019.find_all("li", {"class": "conference"})
+papers_2019 = soup_2019.find_all("li", {"class": "none"}) #for 2019
+papers_2019 = [(x.a.string, x.a["href"]) for x in papers_2019]
 
 title = []
 authors = []
@@ -18,7 +20,7 @@ abstract = []
 year = []
 
 bad_pages = []
-for paper in tqdm(papers_2022):
+for paper in tqdm(papers_2019):
     paper_page_url = baseurl+paper[1]
     paper_page_url_response = requests.get(paper_page_url)
     paper_soup = BeautifulSoup(paper_page_url_response.content, "html.parser")
@@ -36,9 +38,9 @@ for paper in tqdm(papers_2022):
     title.append(paper_title)
     authors.append(paper_author)
     abstract.append(paper_abstract)
-    year.append("2022")
+    year.append("2019")
 
 df = pd.DataFrame(data={"title":title, "authors":authors, "abstract": abstract, "year": year})
-df.to_csv("nips_2022.csv", index=False)
+df.to_csv("nips_2019.csv", index=False)
 print(bad_pages)
 print(df.head())
