@@ -6,12 +6,16 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as  plt
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from bert import BertForEmbedding
 import umap
 import hdbscan
 
 from numpy import dot
 from numpy.linalg import norm
+from sklearn.metrics import silhouette_score
+from sklearn.feature_extraction.text import CountVectorizer
+
 
 def create_embeddings(file_path, save_path="nips_2022_embeddings"):
     bert_model = BertForEmbedding()
@@ -74,7 +78,6 @@ from functools import reduce
 def detect_keywords(x, keywords):
     return reduce(lambda x, y: x or y , map(lambda w: w in x, keywords))
 
-
 def visualize(embeddings, labels):
     umap_data = umap.UMAP(n_neighbors=15, n_components=2, min_dist=0.0, metric='cosine').fit_transform(embeddings)
 
@@ -89,3 +92,46 @@ def visualize(embeddings, labels):
     plt.scatter(clustered.x, clustered.y, c=clustered.labels, s=0.05, cmap='hsv_r')
     plt.colorbar()
     plt.show()
+
+def metrics(metrics_l, embeddings, labels, dic = {}):
+    for metric in metrics_l:
+        if metric == "sil":
+            dic["sil"] = silhouette_score(embeddings, labels)
+        else:
+            print("don't have those implemented yet.")
+    return dic
+
+# topic modeling
+def create_docs_per_topic(df, labels):
+    df["Topic"] = labels
+    df["Doc_ID"] = range(len(df))
+    docs_per_topic = df.groupby(['Topic'], as_index = False).agg({'abstract': ' '.join})
+    return df, docs_per_topic
+
+def c_tf_idf(documents, m, ngram_range=(1, 1)):
+    count = CountVectorizer(ngram_range=ngram_range, stop_words="english").fit(documents)
+    t = count.transform(documents).toarray()
+    w = t.sum(axis=1)
+    tf = np.divide(t.T, w)
+    sum_t = t.sum(axis=0)
+    idf = np.log(np.divide(m, sum_t)).reshape(-1, 1)
+    tf_idf = np.multiply(tf, idf)
+
+    return tf_idf, count
+
+def extract_top_n_words_per_topic(tf_idf, count, docs_per_topic, n=20):
+    words = count.get_feature_names()
+    labels = list(docs_per_topic.Topic)
+    tf_idf_transposed = tf_idf.T
+    indices = tf_idf_transposed.argsort()[:, -n:]
+    top_n_words = {label: [(words[j], tf_idf_transposed[i][j]) for j in indices[i]][::-1] for i, label in enumerate(labels)}
+    return top_n_words
+
+def extract_topic_sizes(df):
+    topic_sizes = (df.groupby(['Topic'])
+                     .abstract
+                     .count()
+                     .reset_index()
+                     .rename({"Topic": "Topic", "abstract": "Size"}, axis='columns')
+                     .sort_values("Size", ascending=False))
+    return topic_sizes
