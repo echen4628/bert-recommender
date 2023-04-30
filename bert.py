@@ -21,7 +21,11 @@ class BertForEmbedding():
         output = self.bert(input_tokens) #torch.Size([batch, token_length, 768])
 
         # return only the embeddings corresponding [CLS]
-        return output.last_hidden_state[:,0,:]
+        # return output.last_hidden_state[:,0,:]
+
+        # return average of the hidden states
+        return torch.mean(output.last_hidden_state, axis=1)
+        pdb.set_trace()
     
     @torch.no_grad()
     def bertify_abstracts(self, abstract_l):

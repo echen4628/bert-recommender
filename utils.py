@@ -15,6 +15,8 @@ from numpy import dot
 from numpy.linalg import norm
 from sklearn.metrics import silhouette_score
 from sklearn.feature_extraction.text import CountVectorizer
+from tqdm import tqdm
+import os
 
 
 def create_embeddings(file_path, save_path="nips_2022_embeddings"):
@@ -78,6 +80,21 @@ def cluster_and_predict(embeddings, method, num_cluster=None):
         return clusters, None
     else:
         raise Exception("Please use one of {gmm, dbscan}")
+
+def train_cluster(embeddings, method, metric, num_cluster_range=None, saving_path=None):
+    scores = {}
+    models = {}
+    if method == "gmm":
+        for num_cluster in tqdm(num_cluster_range):
+            clusters, gmm = cluster_and_predict(embeddings, method, num_cluster)
+            current_metric = metrics([metric], embeddings, clusters)
+            scores[num_cluster] = current_metric[metric]
+            models[num_cluster] = gmm
+            if saving_path:
+                file = open(os.path.join(saving_path, f"gmm_{num_cluster}.pkl"), 'wb')
+                pickle.dump(gmm, file)
+                file.close() 
+    return models, scores   
 
 # can use word to vec 30,000 vector instead of bert output and see which one is better
 from functools import reduce

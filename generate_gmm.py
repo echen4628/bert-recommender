@@ -1,6 +1,10 @@
 from utils import *
 from tqdm import tqdm
 
+def train_cluster()
+
+
+
 # load embeddings
 embeddings = np.array(load_embeddings(file_path="nips_2022_embeddings_n.pkl"))
 # create loop
