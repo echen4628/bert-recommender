@@ -8,8 +8,10 @@ class BertForEmbedding():
         self.bert = BertModel.from_pretrained(config).to(device)
         self.tokenizer = BertTokenizer.from_pretrained(config)
         self.device = device
+
     def clip(self, tokens):
         return tokens[:511] + [102]
+    
     @torch.no_grad()
     def bertify_single_abstract(self, abstract):
         # tokenize inputs and add [CLS]
@@ -25,10 +27,12 @@ class BertForEmbedding():
 
         # return average of the hidden states
         return torch.mean(output.last_hidden_state, axis=1)
-        pdb.set_trace()
     
     @torch.no_grad()
     def bertify_abstracts(self, abstract_l):
+        """
+        takes a list of abstracts and return a 2D numpy array containing abstract embeddings.
+        """
         # tokenize inputs and add [CLS] 
         outputs = []
         for idx, abstract in tqdm(enumerate(abstract_l)):
